@@ -1,3 +1,4 @@
+using System.Data;
 using System.Text.Json;
 using Carter;
 using FluentValidation;
@@ -7,12 +8,16 @@ using Maksov.AwsTutorial.ToDoList.BLL;
 using Maksov.AwsTutorial.ToDoList.BLL.Implementation;
 using Maksov.AwsTutorial.ToDoList.BLL.Implementation.Validators;
 using Maksov.AwsTutorial.ToDoList.DAL;
+using Maksov.AwsTutorial.ToDoList.DAL.Config;
 using Maksov.AwsTutorial.ToDoList.DAL.Implementation;
+using Maksov.AwsTutorial.ToDoList.DAL.Migrations;
 using Mapster;
 using MapsterMapper;
 using Serilog;
 using Microsoft.OpenApi.Models;
 using Microsoft.AspNetCore.Http.Json;
+using Microsoft.Extensions.Options;
+using Npgsql;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,6 +31,23 @@ builder.Services.Configure<JsonOptions>(options =>
 {
     options.SerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
 });
+
+builder.Services.Configure<DatabaseConfig>(config =>
+{
+    var connectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING");
+    if (!string.IsNullOrWhiteSpace(connectionString))
+    {
+        config = new DatabaseConfig { ConnectionString = connectionString};
+    }
+    builder.Configuration.GetSection("Database").Bind(config);
+});
+
+builder.Services.AddScoped<IDbConnection>(sp =>
+{
+    var config = sp.GetRequiredService<IOptions<DatabaseConfig>>().Value;
+    return new NpgsqlConnection(config.ConnectionString);
+});
+builder.Services.AddScoped<IToDoRepository, ToDoRepository>();
 
 var typeAdapterConfig = TypeAdapterConfig.GlobalSettings;
 typeAdapterConfig.Scan(
@@ -45,7 +67,7 @@ builder.Services.AddMediatR(config =>
 });
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 builder.Services.AddValidatorsFromAssemblyContaining<GetByIdToDoQueryValidator>();
-builder.Services.AddSingleton<IToDoRepository, ToDoRepository>();
+
 /*builder.Services.Scan(scan => scan
     .FromAssembliesOf(typeof(IToDoRepository))
     .AddClasses()
@@ -67,6 +89,12 @@ builder.Services.AddSwaggerGen(options =>
 var app = builder.Build();
 
 app.UseMiddleware<ExceptionHandlerMiddleware>();
+
+using (var scope = app.Services.CreateScope())
+{
+    var config = scope.ServiceProvider.GetRequiredService<IOptions<DatabaseConfig>>();
+    MigrationRunner.RunMigrations(config);
+}
 
 // Enable Swagger
 app.UseSwagger();

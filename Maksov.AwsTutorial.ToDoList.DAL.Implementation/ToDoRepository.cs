@@ -1,46 +1,51 @@
+using System.Data;
+using Dapper;
 using Maksov.AwsTutorial.ToDoList.DAL.Entities;
 
 namespace Maksov.AwsTutorial.ToDoList.DAL.Implementation;
 
-public sealed class ToDoRepository : IToDoRepository
+public class ToDoRepository : IToDoRepository
 {
-    private int _sequenceId;
-    private readonly List<ToDoItem> _items = new();
+    private readonly IDbConnection _dbConnection;
 
-    public Task<ICollection<ToDoItem>> GetAllAsync() => 
-        Task.FromResult<ICollection<ToDoItem>>(_items);
-
-    public Task<ToDoItem?> GetByIdAsync(int id) =>
-        Task.FromResult(_items.FirstOrDefault(x => x.Id == id));
-
-    public Task AddAsync(ToDoItem item)
+    public ToDoRepository(IDbConnection dbConnection)
     {
-        item.Id = ++_sequenceId;
-        _items.Add(item);
-        return Task.CompletedTask;
+        _dbConnection = dbConnection;
     }
 
-    public Task UpdateAsync(ToDoItem item)
+    public async Task<IEnumerable<ToDoItem>> GetAllAsync()
     {
-        var index = _items.FindIndex(x => x.Id == item.Id);
-        if (index == -1)
-        {
-            throw new KeyNotFoundException($"ToDo item with ID {item.Id} not found.");
-        }
-
-        _items[index] = item;
-        return Task.CompletedTask;
+        const string query = "SELECT Id, Title, Status FROM ToDoItems;";
+        return await _dbConnection.QueryAsync<ToDoItem>(query);
     }
 
-    public Task DeleteAsync(int id)
+    public async Task<ToDoItem?> GetByIdAsync(int id)
     {
-        var index = _items.FindIndex(x => x.Id == id);
-        if (index == -1)
-        {
-            throw new KeyNotFoundException($"ToDo item with ID {id} not found.");
-        }
+        const string query = "SELECT Id, Title, Status FROM ToDoItems WHERE Id = @Id;";
+        return await _dbConnection.QueryFirstOrDefaultAsync<ToDoItem>(query, new { Id = id });
+    }
 
-        _items.RemoveAll(x => x.Id == id);
-        return Task.CompletedTask;
+    public async Task AddAsync(ToDoItem item)
+    {
+        const string query = @"
+            INSERT INTO ToDoItems (Title, Status)
+            VALUES (@Title, @Status::INTEGER)
+            RETURNING Id;";
+        item.Id = await _dbConnection.ExecuteScalarAsync<int>(query, item);
+    }
+
+    public async Task UpdateAsync(ToDoItem item)
+    {
+        const string query = @"
+            UPDATE ToDoItems
+            SET Title = @Title, Status = @Status::INTEGER
+            WHERE Id = @Id;";
+        await _dbConnection.ExecuteAsync(query, item);
+    }
+
+    public async Task DeleteAsync(int id)
+    {
+        const string query = "DELETE FROM ToDoItems WHERE Id = @Id;";
+        await _dbConnection.ExecuteAsync(query, new { Id = id });
     }
 }

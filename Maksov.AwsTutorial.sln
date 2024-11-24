@@ -10,6 +10,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Maksov.AwsTutorial.ToDoList
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Maksov.AwsTutorial.ToDoList.DAL.Implementation", "Maksov.AwsTutorial.ToDoList.DAL.Implementation\Maksov.AwsTutorial.ToDoList.DAL.Implementation.csproj", "{120A7F21-2C19-478D-A763-4E8449CC4917}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Maksov.AwsTutorial.ToDoList.DAL.Migrations", "Maksov.AwsTutorial.ToDoList.DAL.Migrations\Maksov.AwsTutorial.ToDoList.DAL.Migrations.csproj", "{020A7ABA-B3AF-4BEE-B2BF-9534AF667B2F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -36,5 +38,9 @@ Global
 		{120A7F21-2C19-478D-A763-4E8449CC4917}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{120A7F21-2C19-478D-A763-4E8449CC4917}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{120A7F21-2C19-478D-A763-4E8449CC4917}.Release|Any CPU.Build.0 = Release|Any CPU
+		{020A7ABA-B3AF-4BEE-B2BF-9534AF667B2F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{020A7ABA-B3AF-4BEE-B2BF-9534AF667B2F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{020A7ABA-B3AF-4BEE-B2BF-9534AF667B2F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{020A7ABA-B3AF-4BEE-B2BF-9534AF667B2F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
